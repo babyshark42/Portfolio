@@ -236,20 +236,28 @@
             box-shadow: 0 0 10px var(--neon-blue);
         }
 
-        /* Video Container */
+        /* Video Container - Responsive */
         .video-container {
             border: 1px solid var(--neon-blue);
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
             background: #000;
-            height: 250px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* Aspect Ratio 16:9 */
         }
-        .video-player {
-            width: 95%; height: 95%; object-fit: cover;
+        
+        /* IFRAME / VIDEO absolute positioning to fill container */
+        .video-container iframe, 
+        .video-container video,
+        .video-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
 
@@ -430,7 +438,8 @@
             
             <div class="d-flex justify-content-center gap-3">
                 <a href="#contact" class="btn btn-neon">INITIALIZE CONTACT</a>
-                <a href="Resume_Wattanachai.pdf" class="btn btn-neon" target="_blank"><i class="fas fa-download"></i> DOWNLOAD CV</a>
+                <!-- UPDATED: Fixed Download Link with explicit path and download attribute -->
+                <a href="./Resume_Wattanachai.pdf" class="btn btn-neon" target="_blank" download="Resume_Wattanachai.pdf"><i class="fas fa-download"></i> DOWNLOAD CV</a>
             </div>
         </div>
     </header>
@@ -439,7 +448,7 @@
     <div class="tech-marquee">
         <!-- Wrapper containing 2 identical groups -->
         <div class="marquee-wrapper">
-            <!-- Group 1: I Added MORE icons here to ensure it's longer than screen -->
+            <!-- Group 1 -->
             <div class="marquee-group">
                 <i class="devicon-python-plain tech-icon"></i>
                 <i class="devicon-cplusplus-plain tech-icon"></i>
@@ -453,7 +462,7 @@
                 <i class="devicon-vscode-plain tech-icon"></i>
                 <i class="devicon-opencv-plain tech-icon"></i>
             </div>
-            <!-- Group 2: Identical Copy for seamless loop (Must be EXACTLY same as Group 1) -->
+            <!-- Group 2 -->
             <div class="marquee-group">
                 <i class="devicon-python-plain tech-icon"></i>
                 <i class="devicon-cplusplus-plain tech-icon"></i>
@@ -573,25 +582,29 @@
         </div>
     </section>
 
-    <!-- Projects Section (Updated with 3 Projects) -->
+    <!-- Projects Section -->
     <section id="projects">
         <div class="container">
             <h2 class="section-title text-white">Project Prototype</h2>
             <div class="row justify-content-center">
                 
-                <!-- Project 1: Planting Robot (Original) -->
+                <!-- Project 1: Planting Robot -->
                 <div class="col-lg-10">
                     <div class="tech-card">
                         <div class="row align-items-center">
                             <div class="col-md-5 mb-3 mb-md-0">
-                                <!-- Video Loop Container -->
+                                <!-- UPDATED: Used YouTube Embed to avoid large file issues -->
                                 <div class="video-container">
+                                    <!-- Replace the src below with your actual YouTube Embed URL -->
+                                    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?mute=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                    
+                                    <!-- Fallback: Uncomment below if you REALLY want to use local file (Not Recommended for GitHub Pages > 25MB) -->
+                                    <!-- 
                                     <video class="video-player" autoplay loop muted playsinline>
-                                        <!-- Check file name -->
                                         <source src="project_demo.mp4" type="video/mp4">
-                                        <!-- Fallback image if video fails -->
-                                        <img src="project1.jpg" alt="CNC Robot" style="width:100%; height:100%; object-fit:cover;">
-                                    </video>
+                                        Your browser does not support the video tag.
+                                    </video> 
+                                    -->
                                 </div>
                             </div>
                             <div class="col-md-7">
@@ -609,25 +622,19 @@
                                     <li><span class="text-neon">></span> Designed electrical control system & power distribution.</li>
                                     <li><span class="text-neon">></span> Create a control program with G code.</li>
                                 </ul>
-                                <!--button class="btn btn-neon mt-2"><i class="fas fa-play"></i> DEMO SEQUENCE</button-->
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Project 2: ROS Navigation (New) -->
-                <!-- Use 'order' classes to flip image/text for visual variety on Desktop -->
+                <!-- Project 2: ROS Navigation -->
                 <div class="col-lg-10 mt-5">
                     <div class="tech-card">
                         <div class="row align-items-center">
-                            <!-- Image on Right for Zig-Zag effect -->
                             <div class="col-md-5 mb-3 mb-md-0 order-md-2"> 
                                 <div class="video-container">
-                                    <video class="video-player" autoplay loop muted playsinline>
-                                        <source src="project_demo2.mp4" type="video/mp4">
-                                        <img src="project2.jpg" alt="ROS AMR" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.innerText='[Video: ROS Navigation]';">
-                                        <span class="text-muted small position-absolute top-50 start-50 translate-middle" style="z-index:-1;"></span>
-                                    </video>
+                                    <!-- Replace with your YouTube ID -->
+                                    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?mute=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                                 </div>
                             </div>
                             <div class="col-md-7 order-md-1">
@@ -645,20 +652,20 @@
                                     <li><span class="text-neon">></span> Implemented Python and MQTT for indoor mapping.</li>
                                     <li><span class="text-neon">></span> Integrated sensor fusion (IMU + AruCO) for precise localization.</li>
                                 </ul>
-                                <!--button class="btn btn-neon mt-2"><i class="fab fa-github"></i> VIEW CODE</button-->
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Project 3: AI Vision (New) -->
+                <!-- Project 3: Self Balancing -->
                 <div class="col-lg-10 mt-5">
                     <div class="tech-card">
                         <div class="row align-items-center">
                             <div class="col-md-5 mb-3 mb-md-0">
-                                <div style="background: #111; height: 250px; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--neon-blue); overflow:hidden; border-radius:10px;">
-                                    <img src="project3.jpg" alt="AI Vision" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.innerText='[Project Image: AI Vision]';">
-                                    <span class="text-neon small" style="position: absolute;"></span>
+                                <div class="video-container">
+                                   <!-- Replace with your YouTube ID or Image -->
+                                    <img src="project3.jpg" alt="Self Balancing Robot" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.innerText='[Project Image: Self Balancing Robot]';">
+                                    <span class="text-neon small" style="position: absolute; top:50%; left:50%; transform:translate(-50%, -50%);"></span>
                                 </div>
                             </div>
                             <div class="col-md-7">
@@ -667,7 +674,6 @@
                                     <span class="badge badge-tech">Arduino</span>
                                     <span class="badge badge-tech">ESP32</span>
                                     <span class="badge badge-tech">PID Control</span>
-                                    <!--span class="badge badge-tech">Deep Learning</span-->
                                 </div>
                                 <p class="text-muted">
                                     Developed a two-wheeled self-balancing robot using Arduino and IMU sensors. 
@@ -677,24 +683,19 @@
                                     <li><span class="text-neon">></span> Realtime Tuning PID parameters and Kalman filter.</li>
                                     <li><span class="text-neon">></span> Control robots via esp32 web interface.</li>
                                 </ul>
-                                <!--button class="btn btn-neon mt-2"><i class="fas fa-file-alt"></i> READ PAPER</button-->
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Project 4: PLC Sorting (New) -->
+                <!-- Project 4: Avatar Robot -->
                 <div class="col-lg-10 mt-5">
                     <div class="tech-card">
                         <div class="row align-items-center">
-                            <!-- Image on Right for Zig-Zag effect -->
                             <div class="col-md-5 mb-3 mb-md-0 order-md-2"> 
                                 <div class="video-container">
-                                    <video class="video-player" autoplay loop muted playsinline>
-                                        <source src="project_demo4.mp4" type="video/mp4">
-                                        <img src="project4.jpg" alt="PLC Sorting" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.innerText='[Video: PLC Sorting]';">
-                                        <span class="text-muted small position-absolute top-50 start-50 translate-middle" style="z-index:-1;"></span>
-                                    </video>
+                                    <!-- Replace with your YouTube ID -->
+                                    <iframe src="https://youtu.be/-jcu6rtEZQA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                                 </div>
                             </div>
                             <div class="col-md-7 order-md-1">
@@ -713,7 +714,6 @@
                                     <li><span class="text-neon">></span> Develop and design a website that can control avatar robots remotely controlled by people with disabilities.</li>
                                     <li><span class="text-neon">></span> Develop a real-time video streaming system and a robot movement control system using servo motors.</li>
                                 </ul>
-                                <!--button class="btn btn-neon mt-2"><i class="fas fa-cogs"></i> SYSTEM DIAGRAM</button-->
                             </div>
                         </div>
                     </div>
@@ -900,8 +900,16 @@
     <script type="module">
         import { GoogleGenerativeAI } from "@google/generative-ai";
 
-        // ⚠️ IMPORTANT: ใส่ Gemini API Key ของคุณในช่องว่างด้านล่าง
-        const API_KEY = "AIzaSyBJqvZv89VOfEkuGkrADSNAXHwxa7hhM5E"; 
+        // ==========================================
+        // ⚠️ CRITICAL FOR DEPLOYMENT ⚠️
+        // ==========================================
+        // 1. ใส่ API Key ของคุณตรงนี้แทนช่องว่าง ""
+        // 2. ถ้า Deploy แล้ว AI ไม่ตอบ ให้ไปที่ https://aistudio.google.com/app/apikey
+        // 3. คลิกที่ Key ของคุณ -> Edit API key
+        // 4. ในส่วน "API restrictions" ให้เลือก "Allow all origins" หรือใส่โดเมนเว็บไซต์ของคุณ
+        // 5. บันทึกและรอสักครู่
+        
+        const API_KEY = "AIzaSyBJqvZv89VOfEkuGkrADSNAXHwxa7hhM5E"; // <--- ใส่ Key ของคุณที่นี่ (e.g., "AIzaSy...")
         
         const genAI = new GoogleGenerativeAI(API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-09-2025" });
@@ -915,7 +923,8 @@
             
             // Check for API Key
             if(API_KEY === "") {
-                body.innerHTML += `<div class="msg-system" style="color:red;">> Error: Missing API Key in code.</div>`;
+                body.innerHTML += `<div class="msg-system" style="color:#ff4444;">> ERROR: API Key is missing. Please edit index.html and add your Gemini API Key in line ~590.</div>`;
+                input.value = '';
                 return;
             }
 
@@ -944,8 +953,8 @@
 
                 document.getElementById(loadingId).innerHTML = "> " + response;
             } catch (error) {
-                document.getElementById(loadingId).innerHTML = "> Error: Connection Failed.";
-                console.error(error);
+                console.error("Gemini Error:", error);
+                document.getElementById(loadingId).innerHTML = `> <span style="color:#ff4444;">Connection Error.</span><br><small style="color:#888;">Check browser console (F12) for details. (Likely API Key restriction or quota)</small>`;
             }
             body.scrollTop = body.scrollHeight;
         }
@@ -980,7 +989,8 @@
                 const result = await model.generateContent(prompt);
                 resultDiv.innerHTML = result.response.text();
             } catch (error) {
-                resultDiv.innerHTML = "Error generating idea.";
+                console.error("Gemini Idea Error:", error);
+                resultDiv.innerHTML = "Error generating idea. Please check API Key configuration.";
             }
 
             btn.disabled = false;
