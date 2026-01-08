@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wattanachai Phakum | Spatial Portfolio</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fonts: Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Devicon -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
+
+    <!-- Gemini API -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+
+    <style>
+        :root {
+            --bg-deep: #020202;
+            --glass-bg: rgba(15, 15, 20, 0.85); 
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-highlight: rgba(255, 255, 255, 0.25);
+            --accent-glow: #00f0ff; 
+            --accent-sec: #7000ff; 
+            --text-main: #ffffff;
+            --text-muted: #d0d0d0; 
+            --text-sub: #b0b0b0;
+            --sidebar-width: 80px;
+            --sidebar-width-expanded: 200px;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+            /* Adjust content to not be hidden by sidebar on desktop */
+            padding-left: var(--sidebar-width);
+        }
+
+        /* --- CUSTOM CURSOR (Desktop Only) --- */
+        @media (hover: hover) and (pointer: fine) {
+            body { cursor: none; }
+            .cursor-dot, .cursor-outline { display: block; }
+        }
+        @media (hover: none) {
+            .cursor-dot, .cursor-outline { display: none !important; }
+            body { cursor: auto; }
+        }
+
+        .cursor-dot, .cursor-outline {
+            position: fixed; top: 0; left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .cursor-dot { width: 8px; height: 8px; background-color: var(--accent-glow); box-shadow: 0 0 10px var(--accent-glow); }
+        .cursor-outline {
+            width: 40px; height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+            mix-blend-mode: difference;
+        }
+
+        /* --- BACKGROUND ORBS --- */
+        .orb-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; overflow: hidden; pointer-events: none;
+        }
+        .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(80px); opacity: 0.25;
+        }
+        .orb-1 { width: 60vw; height: 60vw; background: var(--accent-glow); top: -20%; left: -20%; }
+        .orb-2 { width: 50vw; height: 50vw; background: var(--accent-sec); bottom: -20%; right: -20%; }
+
+        /* --- GLASS CARDS --- */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 24px;
+            padding: 2rem;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            transition: transform 0.1s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .glass-card::after {
+            content: ""; position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 100%);
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+        .glass-card:hover::after { opacity: 1; }
+
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 { 
+            font-weight: 800; 
+            letter-spacing: -0.02em; 
+            color: #ffffff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        p, li, .text-muted, .text-secondary {
+            color: var(--text-muted) !important;
+            font-weight: 400; line-height: 1.6;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+        .text-info { color: var(--accent-glow) !important; text-shadow: 0 0 10px rgba(0, 240, 255, 0.4); }
+        .font-mono { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--accent-glow); font-weight: 700; }
+        
+        .display-title {
+            font-size: clamp(3rem, 6vw, 5.5rem);
+            line-height: 1.1;
+            color: #ffffff; 
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(0, 240, 255, 0.2);
+            margin-bottom: 20px;
+        }
+
+        /* === VERTICAL SIDEBAR NAVIGATION === */
+        .sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: rgba(10, 10, 12, 0.7);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 0;
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+        
+        /* Expand sidebar on hover (optional, for better UX) */
+        .sidebar:hover {
+            width: var(--sidebar-width-expanded);
+            align-items: flex-start; /* Align text left when expanded */
+            background: rgba(10, 10, 12, 0.9);
+        }
+
+        .nav-logo {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-glow);
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+            white-space: nowrap;
+            padding: 0 1.5rem;
+            opacity: 0; /* Hidden by default until hover or small icon */
+            transition: opacity 0.3s;
+        }
+        /* Always show icon/logo part */
+        .nav-logo-icon {
+            position: absolute; left: 0; width: var(--sidebar-width); 
+            text-align: center; top: 2rem;
+            font-size: 1.5rem; color: var(--accent-glow);
+        }
+        .sidebar:hover .nav-logo { opacity: 1; }
+        .sidebar:hover .nav-logo-icon { opacity: 0; }
+
+        .nav-items {
+            display: flex; flex-direction: column; gap: 10px; width: 100%;
+        }
+
+        .nav-link {
+            display: flex; align-items: center;
+            padding: 12px 1.5rem; /* Padding for expanded view */
+            color: #888;
+            text-decoration: none;
+            transition: 0.3s;
+            width: 100%;
+            position: relative;
+            white-space: nowrap;
+            height: 50px;
+        }
+
+        .nav-link i {
+            min-width: 24px; /* Fixed width for icon */
+            font-size: 1.2rem;
+            text-align: center;
+            margin-right: 20px; /* Space between icon and text */
+            /* Center icon when collapsed */
+            position: absolute; left: calc(var(--sidebar-width) / 2 - 12px); 
+            transition: 0.3s;
+        }
+        
+        .nav-link span {
+            opacity: 0; transition: 0.2s; transform: translateX(-10px);
+            margin-left: 30px; /* Offset text to right of icon area */
+        }
+
+        .sidebar:hover .nav-link i {
+            left: 1.5rem; /* Move icon to normal position on expand */
+        }
+        .sidebar:hover .nav-link span {
+            opacity: 1; transform: translateX(0);
+        }
+
+        /* Active & Hover States */
+        .nav-link:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .nav-link.active {
+            color: var(--accent-glow);
+            background: linear-gradient(90deg, rgba(0, 240, 255, 0.1), transparent);
+            border-left: 3px solid var(--accent-glow);
+        }
+        .nav-link.active i {
+            filter: drop-shadow(0 0 8px var(--accent-glow));
+        }
+
+        /* === PROFILE === */
+        .profile-wrapper {
+            position: relative; width: 260px; height: 260px; margin: 0 auto;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .profile-img {
+            width: 180px; height: 180px; object-fit: cover;
+            border-radius: 50%; position: relative; z-index: 5;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            border: 2px solid rgba(255,255,255,0.8);
+        }
+        /* Rings */
+        .mech-ring { position: absolute; border-radius: 50%; border: 1px solid transparent; pointer-events: none; }
+        .ring-1 { width: 100%; height: 100%; border: 2px dashed var(--accent-glow); opacity: 0.3; animation: spin 20s linear infinite; }
+        .ring-2 { width: 90%; height: 90%; border-top: 2px solid var(--accent-sec); border-bottom: 2px solid var(--accent-sec); opacity: 0.6; animation: spinReverse 15s linear infinite; }
+        .ring-3 { width: 110%; height: 110%; border-left: 4px solid var(--accent-glow); border-right: 4px solid transparent; border-top: 4px solid transparent; border-bottom: 4px solid transparent; opacity: 0.8; animation: spin 4s linear infinite; filter: drop-shadow(0 0 5px var(--accent-glow)); }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes spinReverse { 100% { transform: rotate(-360deg); } }
+
+        /* Buttons */
+        .btn-glow {
+            background: rgba(255,255,255,0.1); color: #fff;
+            border: 1px solid var(--glass-border); padding: 12px 28px; border-radius: 50px;
+            font-weight: 600; text-decoration: none; display: inline-block; transition: 0.3s;
+            position: relative; overflow: hidden; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .btn-glow:hover { border-color: var(--accent-glow); box-shadow: 0 0 25px rgba(0, 240, 255, 0.4); color: #fff; background: rgba(0, 240, 255, 0.1); }
+
+        /* Marquee */
+        .marquee-container {
+            width: 100%; overflow: hidden; padding: 40px 0; background: rgba(0, 0, 0, 0.4);
+            border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
+        }
+        .marquee-content { display: flex; gap: 60px; width: max-content; animation: scroll 30s linear infinite; }
+        .tech-icon { font-size: 3.5rem; color: rgba(255,255,255,0.5); transition: 0.3s; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
+        .tech-icon:hover { color: var(--accent-glow); transform: scale(1.1); filter: drop-shadow(0 0 15px var(--accent-glow)); }
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        /* Projects */
+        .project-media { border-radius: 16px; overflow: hidden; border: 1px solid var(--glass-border); aspect-ratio: 16/9; background: #000; position: relative; }
+        .project-media iframe, .project-media img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Cert Grid */
+        .cert-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
+        .cert-item { background: rgba(0,0,0,0.6); border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px; cursor: pointer; text-align: center; transition: 0.3s; }
+        .cert-item:hover { border-color: var(--accent-glow); transform: translateY(-5px); background: rgba(255,255,255,0.05); }
+        .cert-thumb { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; opacity: 0.9; }
+        .cert-title { font-size: 0.85rem; color: #fff; font-weight: 500; }
+
+        /* AI Chat */
+        .ai-fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: rgba(30, 30, 30, 0.9); backdrop-filter: blur(10px); border: 1px solid var(--accent-glow); border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 999; transition: 0.3s; box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); }
+        .ai-fab:hover { background: var(--accent-glow); color: #000; transform: scale(1.1); }
+        .ai-window { position: fixed; bottom: 100px; right: 30px; width: 350px; height: 500px; background: #111; border: 1px solid var(--glass-border); border-radius: 24px; display: none; flex-direction: column; z-index: 999; box-shadow: 0 20px 60px rgba(0,0,0,1); }
+
+        /* Modal */
+        .modal-content { background: #111; border: 1px solid var(--glass-border); color: white; }
+        .btn-close-white { filter: invert(1); }
+
+        .gsap-reveal { opacity: 0; transform: translateY(30px); }
+        .spacer { height: 80px; }
+        ul.custom-list { list-style: none; padding-left: 0; }
+        ul.custom-list li { margin-bottom: 10px; font-size: 0.95rem; color: #e0e0e0; display: flex; align-items: start; }
+        ul.custom-list li i { color: var(--accent-glow); margin-right: 10px; margin-top: 4px; }
+        
+        /* Mobile Specific */
+        @media (max-width: 768px) {
+            body { padding-left: 0; } /* Remove sidebar padding on mobile */
+            .sidebar {
+                width: 100%; height: auto;
+                bottom: 0; top: auto; /* Move to bottom like an app bar */
+                flex-direction: row;
+                justify-content: space-around;
+                padding: 10px;
+                border-right: none;
+                border-top: 1px solid var(--glass-border);
+                background: rgba(10, 10, 12, 0.95);
+            }
+            .nav-logo, .nav-logo-icon { display: none; }
+            .nav-items { flex-direction: row; justify-content: space-around; width: 100%; gap: 0; }
+            .nav-link { 
+                padding: 10px; width: auto; justify-content: center; height: auto; border-left: none; 
+                flex-direction: column;
+            }
+            .nav-link i { position: static; margin-right: 0; font-size: 1.4rem; margin-bottom: 4px; }
+            .nav-link span { display: none; } /* Hide text on mobile nav */
+            .nav-link.active { background: transparent; border-left: none; color: var(--accent-glow); }
+            
+            .display-title { font-size: 3rem; }
+            .glass-card { padding: 1.5rem; transform: none !important; }
+            .ai-window { width: 90%; right: 5%; bottom: 100px; height: 60vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cursor-dot" data-cursor-dot></div>
+    <div class="cursor-outline" data-cursor-outline></div>
+
+    <div class="orb-container">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <!-- Vertical Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="nav-logo-icon"><i class="fas fa-microchip"></i></div>
+        <div class="nav-logo">W.PHAKUM</div>
+        
+        <div class="nav-items">
+            <a href="#home" class="nav-link active" data-section="home">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="#skills" class="nav-link" data-section="skills">
+                <i class="fas fa-tools"></i>
+                <span>Skills</span>
+            </a>
+            <a href="#work" class="nav-link" data-section="work">
+                <i class="fas fa-project-diagram"></i>
+                <span>Projects</span>
+            </a>
+            <a href="#experience" class="nav-link" data-section="experience">
+                <i class="fas fa-history"></i>
+                <span>Timeline</span>
+            </a>
+            <a href="#certs" class="nav-link" data-section="certs">
+                <i class="fas fa-certificate"></i>
+                <span>Certs</span>
+            </a>
+            <a href="#contact" class="nav-link" data-section="contact">
+                <i class="fas fa-envelope"></i>
+                <span>Contact</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero -->
+        <section id="home" class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+            <div class="container text-center">
+                <div class="profile-wrapper mb-4 gsap-reveal">
+                    <!-- Mechanical Rings Animation -->
+                    <div class="mech-ring ring-1"></div>
+                    <div class="mech-ring ring-2"></div>
+                    <div class="mech-ring ring-3"></div>
+                    
+                    <img src="profile.jpg" alt="Profile" class="profile-img" onerror="this.src='https://via.placeholder.com/300x300?text=WP'">
+                </div>
+                
+                <div class="font-mono mb-3 gsap-reveal">> SYSTEM_ONLINE: V.2026</div>
+                <h1 class="display-title gsap-reveal">WATTANACHAI<br>PHAKUM</h1>
+                <p class="lead mb-5 gsap-reveal" style="max-width: 600px; margin: 0 auto; color: #e0e0e0;">
+                    "Bridging the gap between <span style="color:var(--accent-glow); font-weight:600;">Hardware</span> and <span style="color:var(--accent-glow); font-weight:600;">Intelligent Software</span>."<br>
+                    <span class="small mt-2 d-block" style="color:#b0b0b0;">Electrical Engineer & Robotics Specialist</span>
+                </p>
+                
+                <div class="d-flex gap-3 justify-content-center gsap-reveal flex-wrap">
+                    <a href="#work" class="btn-glow">View Projects</a>
+                    <a href="./Resume_Wattanachai.pdf" target="_blank" class="btn-glow" style="background:transparent; border-color: rgba(255,255,255,0.4);"><i class="fas fa-download me-2"></i>CV</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Marquee -->
+        <div class="marquee-container gsap-reveal">
+            <div class="marquee-content">
+                <i class="devicon-python-plain tech-icon"></i>
+                <i class="devicon-cplusplus-plain tech-icon"></i>
+                <i class="devicon-ros-original tech-icon"></i>
+                <i class="devicon-arduino-plain tech-icon"></i>
+                <i class="devicon-linux-plain tech-icon"></i>
+                <i class="devicon-git-plain tech-icon"></i>
+                <i class="fas fa-microchip tech-icon"></i>
+                <i class="fas fa-robot tech-icon"></i>
+                <i class="fas fa-bolt tech-icon"></i>
+                <i class="devicon-vscode-plain tech-icon"></i>
+                <i class="devicon-opencv-plain tech-icon"></i>
+                <!-- Duplicate -->
+                <i class="devicon-python-plain tech-icon"></i>
+                <i class="devicon-cplusplus-plain tech-icon"></i>
+                <i class="devicon-ros-original tech-icon"></i>
+                <i class="devicon-arduino-plain tech-icon"></i>
+                <i class="devicon-linux-plain tech-icon"></i>
+                <i class="devicon-git-plain tech-icon"></i>
+                <i class="fas fa-microchip tech-icon"></i>
+                <i class="fas fa-robot tech-icon"></i>
+                <i class="fas fa-bolt tech-icon"></i>
+                <i class="devicon-vscode-plain tech-icon"></i>
+                <i class="devicon-opencv-plain tech-icon"></i>
+            </div>
+        </div>
+
+        <!-- Skills -->
+        <section id="skills" class="py-5">
+            <div class="container">
+                <h2 class="text-center mb-5 gsap-reveal">Technical Modules</h2>
+                <div class="row g-4">
+                    <div class="col-md-4 gsap-reveal">
+                        <div class="glass-card" data-tilt data-tilt-max="5" data-tilt-speed="400">
+                            <div class="text-center mb-4"><i class="fas fa-cogs fa-2x" style="color:var(--accent-glow)"></i></div>
+                            <h4 class="text-center mb-3">Automation</h4>
+                            <ul class="custom-list">
+                                <li><i class="fas fa-check"></i> Mitsubishi PLC (GX Works 2/3)</li>
+                                <li><i class="fas fa-check"></i> PID Control Systems</li>
+                                <li><i class="fas fa-check"></i> HMI & SCADA</li>
+                                <li><i class="fas fa-check"></i> Industrial Wiring</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-4 gsap-reveal">
+                        <div class="glass-card" data-tilt data-tilt-max="5" data-tilt-speed="400">
+                            <div class="text-center mb-4"><i class="fas fa-microchip fa-2x" style="color:var(--accent-sec)"></i></div>
+                            <h4 class="text-center mb-3">Embedded</h4>
+                            <ul class="custom-list">
+                                <li><i class="fas fa-check"></i> ESP32 / STM32</li>
+                                <li><i class="fas fa-check"></i> Motor Drivers (Stepper/Servo)</li>
+                                <li><i class="fas fa-check"></i> PCB Design</li>
+                                <li><i class="fas fa-check"></i> Sensors Integration</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-4 gsap-reveal">
+                        <div class="glass-card" data-tilt data-tilt-max="5" data-tilt-speed="400">
+                            <div class="text-center mb-4"><i class="fas fa-code fa-2x text-white"></i></div>
+                            <h4 class="text-center mb-3">Software</h4>
+                            <ul class="custom-list">
+                                <li><i class="fas fa-check"></i> Python & C++</li>
+                                <li><i class="fas fa-check"></i> ROS (Robot Operating System)</li>
+                                <li><i class="fas fa-check"></i> Solid Edge (CAD)</li>
+                                <li><i class="fas fa-check"></i> Git / Linux / OpenCV</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects -->
+        <section id="work" class="py-5">
+            <div class="container">
+                <div class="row align-items-end mb-5 gsap-reveal">
+                    <div class="col-lg-8">
+                        <div class="font-mono mb-2">/ PROJECT_ARCHIVE</div>
+                        <h2 class="display-5">Project Prototype</h2>
+                    </div>
+                </div>
+
+                <div class="row g-5">
+                    <div class="col-lg-6 gsap-reveal">
+                        <div class="glass-card p-0" data-tilt data-tilt-max="5">
+                            <div class="project-media">
+                                <iframe src="https://www.youtube.com/embed/GEkyPz4CqGg" frameborder="0" allowfullscreen></iframe>
+                            </div>
+                            <div class="p-4">
+                                <h4>Automated Planting Robot (CNC)</h4>
+                                <p class="small">3-axis Cartesian robot using Stepper Motors. Custom G-code interpretation for precision agriculture.</p>
+                                <div class="d-flex gap-2 flex-wrap mt-3">
+                                    <span class="badge bg-secondary">Arduino</span>
+                                    <span class="badge bg-secondary">C++</span>
+                                    <span class="badge bg-secondary">Gcode</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 gsap-reveal">
+                        <div class="glass-card p-0" data-tilt data-tilt-max="5">
+                            <div class="project-media">
+                                <iframe src="https://www.youtube.com/embed/9f0eolOOaFc" frameborder="0" allowfullscreen></iframe>
+                            </div>
+                            <div class="p-4">
+                                <h4>Solve Maze Robot</h4>
+                                <p class="small">Autonomous navigation using LiDAR, OpenCV, and MQTT with sensor fusion (IMU + AruCO).</p>
+                                <div class="d-flex gap-2 flex-wrap mt-3">
+                                    <span class="badge bg-secondary">ROS</span>
+                                    <span class="badge bg-secondary">Python</span>
+                                    <span class="badge bg-secondary">OpenCV</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 gsap-reveal">
+                        <div class="glass-card p-0" data-tilt data-tilt-max="5">
+                            <div class="project-media">
+                                <img src="project3.jpg" alt="Self Balancing" onerror="this.src='https://via.placeholder.com/600x400?text=Self+Balancing+Robot'">
+                            </div>
+                            <div class="p-4">
+                                <h4>Self Balancing Robot</h4>
+                                <p class="small">Two-wheeled robot using PID control and Kalman filter for stability.</p>
+                                <div class="d-flex gap-2 flex-wrap mt-3">
+                                    <span class="badge bg-secondary">ESP32</span>
+                                    <span class="badge bg-secondary">PID Control</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 gsap-reveal">
+                        <div class="glass-card p-0" data-tilt data-tilt-max="5">
+                            <div class="project-media">
+                                <iframe src="https://www.youtube.com/embed/-jcu6rtEZQA" frameborder="0" allowfullscreen></iframe>
+                            </div>
+                            <div class="p-4">
+                                <h4>Avatar Robot</h4>
+                                <p class="small">Telepresence robot for elderly care. WebRTC streaming & Servo control.</p>
+                                <div class="d-flex gap-2 flex-wrap mt-3">
+                                    <span class="badge bg-secondary">Raspberry Pi</span>
+                                    <span class="badge bg-secondary">WebRTC</span>
+                                    <span class="badge bg-secondary">Fusion360</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Experience Timeline -->
+        <section id="experience" class="py-5">
+            <div class="container">
+                <h2 class="display-6 mb-5 text-center gsap-reveal"><i class="fas fa-history me-2" style="color:#aaa;"></i> Timeline</h2>
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 gsap-reveal">
+                        <div class="glass-card">
+                            <!-- M.Eng -->
+                            <div class="mb-5 border-start border-secondary ps-4 position-relative">
+                                <div class="position-absolute top-0 start-0 translate-middle bg-info rounded-circle" style="width:12px;height:12px; box-shadow: 0 0 10px cyan;"></div>
+                                <h5 class="mb-1 text-white">M.Eng. Robotics & Automation</h5>
+                                <div class="text-info small mb-3">KMUTT | Ongoing</div>
+                                <p class="small" style="color: #d0d0d0;">
+                                    Focus on Advanced Control Systems, Computer Programming for Robotics, and Research.
+                                </p>
+                            </div>
+
+                            <!-- Work -->
+                            <div class="mb-5 border-start border-secondary ps-4 position-relative">
+                                <div class="position-absolute top-0 start-0 translate-middle bg-white rounded-circle" style="width:10px;height:10px;"></div>
+                                <h5 class="mb-1 text-white">Maintenance Engineer</h5>
+                                <div class="text-white small mb-3">Inoue Rubber (Thailand) PCL | 2022 - 2025</div>
+                                <p class="small" style="color: #d0d0d0;">
+                                    - Preventive maintenance & breakdown reduction.<br>
+                                    - Troubleshot and modified Mitsubishi PLC logic.<br>
+                                    - Root cause analysis of electrical circuits.
+                                </p>
+                            </div>
+
+                            <!-- B.Eng -->
+                            <div class="mb-5 border-start border-secondary ps-4 position-relative">
+                                <div class="position-absolute top-0 start-0 translate-middle bg-secondary rounded-circle" style="width:10px;height:10px;"></div>
+                                <h5 class="mb-1 text-white">B.Eng. Electrical Engineering</h5>
+                                <div class="small" style="color:#bbb;">Kasetsart University | 2022</div>
+                            </div>
+
+                            <!-- High School -->
+                            <div class="border-start border-secondary ps-4 position-relative">
+                                <div class="position-absolute top-0 start-0 translate-middle bg-secondary rounded-circle" style="width:10px;height:10px;"></div>
+                                <h5 class="mb-1 text-white">High School (Science-Math)</h5>
+                                <div class="small" style="color:#bbb;">Suankularbwittayalai Rangsit | 2018</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Certifications -->
+        <section id="certs" class="py-5 mt-5" style="background: rgba(255,255,255,0.02);">
+            <div class="container">
+                <h2 class="display-6 mb-5 text-center gsap-reveal"><i class="fas fa-certificate me-2" style="color:#aaa;"></i> Certifications</h2>
+                <div class="gsap-reveal">
+                    <div class="cert-grid">
+                        <div class="cert-item" onclick="openCert('cert1.jpg', 'Mitsubishi PLC GX Works2')">
+                            <img src="cert1.jpg" class="cert-thumb" onerror="this.src='https://via.placeholder.com/150x100?text=PLC'">
+                            <div class="cert-title">PLC GX Works2</div>
+                        </div>
+                        <div class="cert-item" onclick="openCert('cert11.jpg', 'Mitsubishi PLC GX Works3')">
+                            <img src="cert11.jpg" class="cert-thumb" onerror="this.src='https://via.placeholder.com/150x100?text=GX+Works3'">
+                            <div class="cert-title">PLC GX Works3</div>
+                        </div>
+                        <div class="cert-item" onclick="openCert('cert12.jpg', 'Mitsubishi PLC Function Block')">
+                            <img src="cert12.jpg" class="cert-thumb" onerror="this.src='https://via.placeholder.com/150x100?text=Fn+Block'">
+                            <div class="cert-title">PLC Function Block</div>
+                        </div>
+                        <div class="cert-item" onclick="openCert('cert2.jpg', 'Solid Edge')">
+                            <img src="cert2.jpg" class="cert-thumb" onerror="this.src='https://via.placeholder.com/150x100?text=Solid+Edge'">
+                            <div class="cert-title">Solid Edge</div>
+                        </div>
+                        <div class="cert-item" onclick="openCert('cert6.jpg', 'Positive Thinking')">
+                            <img src="cert6.jpg" class="cert-thumb" onerror="this.src='https://via.placeholder.com/150x100?text=Thinking'">
+                            <div class="cert-title">Positive Thinking</div>
+                        </div>
+                        <div class="cert-item" onclick="openCert('cert3.jpg', 'AI For Vehicle')">
+                            <img src="cert3.jpg" class="cert-thumb" onerror="this.src='https://via.placeholder.com/150x100?text=AI+Vehicle'">
+                            <div class="cert-title">AI For Vehicle</div>
+                        </div>
+                        <div class="cert-item" onclick="openCert('cert4.jpg', 'Motor Drives')">
+                            <img src="cert4.jpg" class="cert-thumb" onerror="this.src='https://via.placeholder.com/150x100?text=Motor+Drives'">
+                            <div class="cert-title">Motor Drives EV</div>
+                        </div>
+                        <div class="cert-item" onclick="openCert('cert5.jpg', 'Battery Pack')">
+                            <img src="cert5.jpg" class="cert-thumb" onerror="this.src='https://via.placeholder.com/150x100?text=Battery'">
+                            <div class="cert-title">Battery Pack</div>
+                        </div>
+                        <div class="cert-item" onclick="openCert('cert9.jpg', 'Metaverse')">
+                            <img src="cert9.jpg" class="cert-thumb" onerror="this.src='https://via.placeholder.com/150x100?text=Metaverse'">
+                            <div class="cert-title">Metaverse</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Lab -->
+        <section id="ailab" class="py-5">
+            <div class="container gsap-reveal">
+                <div class="glass-card text-center" style="max-width: 800px; margin: 0 auto;">
+                    <h3 class="mb-3"><i class="fas fa-brain text-info"></i> AI Lab: Robotics Idea Generator</h3>
+                    <p class="mb-3" style="color:#ccc;">Powered by Gemini AI</p>
+                    <div class="input-group mb-3 mx-auto" style="max-width: 500px;">
+                        <input type="text" id="ideaInput" class="form-control bg-dark text-white border-secondary" placeholder="Enter keyword (e.g. Agriculture)...">
+                        <button class="btn btn-glow" type="button" id="btnGenerate" style="border-radius: 0 50px 50px 0;">GENERATE</button>
+                    </div>
+                    <div id="ideaResult" class="text-start mt-3 p-3 border border-secondary rounded d-none mx-auto" style="max-width: 600px; background: rgba(0,0,0,0.5);"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact -->
+        <section id="contact" class="py-5 mb-5">
+            <div class="container text-center gsap-reveal">
+                <h2 class="display-6 mb-4">Establish Connection</h2>
+                
+                <div class="d-flex justify-content-center gap-4 mb-4 flex-wrap">
+                    <a href="tel:0944855675" class="glass-card py-2 px-4 d-flex align-items-center gap-2 text-decoration-none text-white hover-scale">
+                        <i class="fas fa-phone-alt text-info"></i> 094-485-5675
+                    </a>
+                    <a href="mailto:wattanachaiph@gmail.com" class="glass-card py-2 px-4 d-flex align-items-center gap-2 text-decoration-none text-white hover-scale">
+                        <i class="fas fa-envelope text-info"></i> Email Me
+                    </a>
+                    <a href="https://line.me/ti/p/jXHH0qtGM1" class="glass-card py-2 px-4 d-flex align-items-center gap-2 text-decoration-none text-white hover-scale">
+                        <i class="fab fa-line text-success"></i> Line ID
+                    </a>
+                </div>
+
+                <div class="d-flex justify-content-center gap-4 fs-3">
+                    <a href="https://www.linkedin.com/in/wattanachai-phakum-790293243/" class="text-white hover-scale"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://github.com/babyshark42" class="text-white hover-scale"><i class="fab fa-github"></i></a>
+                </div>
+                
+                <p class="small mt-4" style="color:#888;">Pathum Thani, Thailand</p>
+            </div>
+        </section>
+
+        <div class="spacer"></div>
+    </main>
+
+    <!-- AI Chat Button & Window -->
+    <div class="ai-fab" onclick="toggleAI()">
+        <i class="fas fa-sparkles"></i>
+    </div>
+
+    <div class="ai-window" id="aiWindow">
+        <div class="d-flex justify-content-between align-items-center p-3 border-bottom border-secondary" style="background: rgba(0,0,0,0.5);">
+            <span class="font-mono text-white">AI_ASSISTANT</span>
+            <button onclick="toggleAI()" class="btn btn-sm text-white"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="aiBody" class="p-3" style="flex-grow: 1; overflow-y: auto; color: #ddd; font-size: 0.9rem;">
+            <div class="p-2 bg-dark rounded mb-2 border border-secondary">Hello! I'm Wattanachai's AI. Ask me about his projects!</div>
+        </div>
+        <div class="p-3 border-top border-secondary d-flex gap-2" style="background: rgba(0,0,0,0.5);">
+            <input type="text" id="aiInput" class="form-control bg-dark text-white border-secondary" placeholder="Type..." onkeypress="if(event.key==='Enter') sendAI()">
+            <button onclick="sendAI()" class="btn btn-light"><i class="fas fa-arrow-up"></i></button>
+        </div>
+    </div>
+
+    <!-- Cert Modal -->
+    <div class="modal fade" id="certModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="certModalLabel">Certificate</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="" id="certModalImg" class="img-fluid rounded">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+
+    <!-- Gemini Logic -->
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+        
+        const API_KEY = "AIzaSyCmlWckP0Ro7vrn7Y7-Bwj01YqnsIoqGT4"; // Your Key
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-09-2025" });
+
+        // Chat Logic
+        window.sendAI = async function() {
+            const input = document.getElementById('aiInput');
+            const body = document.getElementById('aiBody');
+            const text = input.value.trim();
+            if(!text) return;
+
+            body.innerHTML += `<div class="p-2 bg-secondary rounded mb-2 text-white text-end" style="align-self: flex-end; width: fit-content; margin-left: auto;">${text}</div>`;
+            input.value = '';
+            body.scrollTop = body.scrollHeight;
+
+            try {
+                const loadId = "load"+Date.now();
+                body.innerHTML += `<div id="${loadId}" class="p-2 bg-dark rounded mb-2 text-white border border-secondary" style="width: fit-content;">Thinking...</div>`;
+                
+                const context = "You are the AI portfolio assistant for Wattanachai Phakum, a Robotics Engineer. Answer questions about his skills (PLC, ROS, Python), experience (Inoue Rubber), and projects (Planting Robot, Maze Robot). Keep answers short and professional.";
+                const result = await model.generateContent(context + " User asks: " + text);
+                document.getElementById(loadId).innerText = result.response.text();
+            } catch(e) { console.error(e); }
+            body.scrollTop = body.scrollHeight;
+        }
+
+        // Idea Generator Logic
+        document.getElementById('btnGenerate').addEventListener('click', async () => {
+            const input = document.getElementById('ideaInput').value;
+            const resultDiv = document.getElementById('ideaResult');
+            const btn = document.getElementById('btnGenerate');
+
+            if(!input) return;
+            
+            btn.disabled = true; btn.innerText = "CALCULATING...";
+            resultDiv.classList.remove('d-none'); resultDiv.innerHTML = "Generating concept...";
+
+            try {
+                const prompt = `Generate a futuristic robotic project idea for "${input}". Format: <b>Project:</b> [Name]<br><b>Function:</b> [Desc]<br><b>Tech:</b> [List]`;
+                const result = await model.generateContent(prompt);
+                resultDiv.innerHTML = result.response.text();
+            } catch (error) { resultDiv.innerHTML = "Error."; }
+            btn.disabled = false; btn.innerText = "GENERATE";
+        });
+    </script>
+
+    <script>
+        // Custom Cursor
+        const cursorDot = document.querySelector("[data-cursor-dot]");
+        const cursorOutline = document.querySelector("[data-cursor-outline]");
+        
+        const isDesktop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+        if(isDesktop) {
+            window.addEventListener("mousemove", (e) => {
+                const { clientX: x, clientY: y } = e;
+                cursorDot.style.left = `${x}px`; cursorDot.style.top = `${y}px`;
+                cursorOutline.animate({ left: `${x}px`, top: `${y}px` }, { duration: 500, fill: "forwards" });
+            });
+            document.querySelectorAll('a, button, .glass-card, .cert-item').forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    cursorOutline.style.width = '60px'; cursorOutline.style.height = '60px';
+                    cursorOutline.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                });
+                el.addEventListener('mouseleave', () => {
+                    cursorOutline.style.width = '40px'; cursorOutline.style.height = '40px';
+                    cursorOutline.style.backgroundColor = 'transparent';
+                });
+            });
+        }
+
+        // Animations & Scroll Spy
+        gsap.registerPlugin(ScrollTrigger);
+        
+        gsap.to(".orb-1", { x: 50, y: 50, duration: 8, repeat: -1, yoyo: true, ease: "sine.inOut" });
+        gsap.to(".orb-2", { x: -30, y: -30, duration: 10, repeat: -1, yoyo: true, ease: "sine.inOut" });
+
+        gsap.utils.toArray('.gsap-reveal').forEach(element => {
+            gsap.fromTo(element, 
+                { opacity: 0, y: 50 },
+                { opacity: 1, y: 0, duration: 1, ease: "power3.out", scrollTrigger: { trigger: element, start: "top 85%" } }
+            );
+        });
+
+        // Sidebar Active State Logic
+        const sections = document.querySelectorAll("section");
+        const navLinks = document.querySelectorAll(".nav-link");
+
+        window.addEventListener("scroll", () => {
+            let current = "";
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= (sectionTop - sectionHeight / 3)) {
+                    current = section.getAttribute("id");
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove("active");
+                if (link.getAttribute("href").includes(current)) {
+                    link.classList.add("active");
+                }
+            });
+        });
+
+        function toggleAI() {
+            const win = document.getElementById('aiWindow');
+            if (win.style.display === 'flex') {
+                gsap.to(win, { opacity: 0, y: 20, duration: 0.3, onComplete: () => win.style.display = 'none' });
+            } else {
+                win.style.display = 'flex';
+                gsap.fromTo(win, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.3 });
+                document.getElementById('aiInput').focus();
+            }
+        }
+
+        function openCert(img, title) {
+            document.getElementById('certModalImg').src = img;
+            document.getElementById('certModalLabel').innerText = title;
+            new bootstrap.Modal(document.getElementById('certModal')).show();
+        }
+    </script>
+</body>
+</html>
